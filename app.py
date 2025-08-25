@@ -150,9 +150,7 @@ if user_input:
       ) AS q_vec
     ),
     retrieved AS (
-      SELECT
-        CLAIM_ID,
-        CLAIM_DESCRIPTION
+      SELECT CLAIM_ID, CLAIM_DESCRIPTION
       FROM CORTEX_FRAUD.CORTEX_FRAUD_SCHEMA.CORTEX_FRAUD_TABLE, query
       ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, q_vec) DESC
       LIMIT 5
@@ -172,9 +170,9 @@ if user_input:
     FROM context;
     """
 
-cursor.execute(query)
-result = cursor.fetchone()
-answer = result[0]
+    cursor.execute(query)
+    result = cursor.fetchone()
+    answer = result[0]
 
     # ------------------------
     # Render assistant message
@@ -184,6 +182,8 @@ answer = result[0]
         st.markdown(answer)
 
     st.rerun()
+
+  
 
 
 
