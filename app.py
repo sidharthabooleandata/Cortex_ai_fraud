@@ -16,6 +16,22 @@ st.markdown("""
         flex-direction: column;
     }
 
+    /* Remove avatar container completely */
+    div[data-testid="stChatMessage"] > div:nth-child(1) {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* Ensure chat text aligns flush left */
+    div[data-testid="stChatMessage"] > div:nth-child(2) {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+
     /* Top (logo) */
     .sidebar-top {
         flex: 0 0 auto;   /* fixed at top */
@@ -184,6 +200,7 @@ if user_input:
     st.rerun()
 
   
+
 
 
 
