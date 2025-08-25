@@ -172,8 +172,9 @@ if user_input:
     FROM context;
     """
 
-    result = session.sql(query).collect()
-    answer = result[0]["ANSWER"]
+cursor.execute(query)
+result = cursor.fetchone()
+answer = result[0]
 
     # ------------------------
     # Render assistant message
@@ -183,6 +184,7 @@ if user_input:
         st.markdown(answer)
 
     st.rerun()
+
 
 
 
