@@ -1,5 +1,5 @@
 import streamlit as st
-from snowflake.snowpark import Session
+
 
 # ------------------------
 # PAGE CONFIG
@@ -75,21 +75,20 @@ with st.sidebar:
 # ------------------------
 # SNOWFLAKE CONNECTION
 # ------------------------
-from snowflake.snowpark import Session
+
 import streamlit as st
+import snowflake.connector
 
-# Use secrets from Streamlit
-connection_parameters = {
-    "account": st.secrets["snowflake"]["account"],
-    "user": st.secrets["snowflake"]["user"],
-    "password": st.secrets["snowflake"]["password"],
-    "role": st.secrets["snowflake"]["role"],
-    "warehouse": st.secrets["snowflake"]["warehouse"],
-    "database": st.secrets["snowflake"]["database"],
-    "schema": st.secrets["snowflake"]["schema"]
-}
-
-session = Session.builder.configs(connection_parameters).create()
+conn = snowflake.connector.connect(
+    account=st.secrets["snowflake"]["account"],
+    user=st.secrets["snowflake"]["user"],
+    password=st.secrets["snowflake"]["password"],
+    role=st.secrets["snowflake"]["role"],
+    warehouse=st.secrets["snowflake"]["warehouse"],
+    database=st.secrets["snowflake"]["database"],
+    schema=st.secrets["snowflake"]["schema"]
+)
+cursor = conn.cursor()
 
 # ------------------------
 # INITIALIZE SESSION STATE
@@ -175,5 +174,6 @@ if user_input:
         st.markdown(answer)
 
     st.rerun()
+
 
 
