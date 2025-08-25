@@ -87,7 +87,7 @@ conn = snowflake.connector.connect(
     warehouse=st.secrets["snowflake"]["warehouse"],
     database=st.secrets["snowflake"]["database"],
     schema=st.secrets["snowflake"]["schema"],
-    private_key=st.secrets["snowflake"]["private_key"].encode()
+    private_key=private_key
 )
 cursor = conn.cursor()
 
@@ -175,6 +175,7 @@ if user_input:
         st.markdown(answer)
 
     st.rerun()
+
 
 
 
