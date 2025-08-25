@@ -79,6 +79,13 @@ with st.sidebar:
 import streamlit as st
 import snowflake.connector
 
+# Load PEM private key from secrets
+private_key_bytes = st.secrets["snowflake"]["private_key"].encode()
+private_key = serialization.load_pem_private_key(
+    private_key_bytes,
+    password=None,
+)
+
 conn = snowflake.connector.connect(
     account=st.secrets["snowflake"]["account"],
     user=st.secrets["snowflake"]["user"],
@@ -175,6 +182,7 @@ if user_input:
         st.markdown(answer)
 
     st.rerun()
+
 
 
 
