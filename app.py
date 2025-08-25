@@ -56,7 +56,6 @@ st.markdown("""
         padding: 30px 30px;
         display: flex;
         justify-content: center;
-        gap: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -200,6 +199,7 @@ if user_input:
     st.rerun()
 
   
+
 
 
 
