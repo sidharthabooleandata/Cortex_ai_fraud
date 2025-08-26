@@ -69,9 +69,11 @@ from cryptography.hazmat.primitives import serialization
 
 private_key_bytes = st.secrets["snowflake"]["private_key"].encode()
 
-private_key = serialization.load_pem_private_key(private_key_bytes, password=None)
+private_key = serialization.load_pem_private_key(
+    private_key_bytes,
+    password=None,   # Or b"your_passphrase" if encrypted
+)
 
-# Convert to PKCS8 DER bytes
 pkb = private_key.private_bytes(
     encoding=serialization.Encoding.DER,
     format=serialization.PrivateFormat.PKCS8,
@@ -85,9 +87,8 @@ conn = snowflake.connector.connect(
     warehouse=st.secrets["snowflake"]["warehouse"],
     database=st.secrets["snowflake"]["database"],
     schema=st.secrets["snowflake"]["schema"],
-    private_key=pkb,   # ✅ DER bytes, not object
+    private_key=pkb,
 )
-
 
 conn = get_connection()
 cursor = conn.cursor()
@@ -212,4 +213,5 @@ if user_input:
     # Update UI
     placeholder.markdown(answer)
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
+
 
