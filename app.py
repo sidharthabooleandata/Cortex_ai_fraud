@@ -96,10 +96,16 @@ def get_embedding(text: str):
     cursor.execute(query, (text,))
     return cursor.fetchone()[0]
 
+def to_array_construct(vec):
+    """Convert a Python list of floats into Snowflake ARRAY_CONSTRUCT(...) SQL"""
+    return "ARRAY_CONSTRUCT(" + ",".join(str(x) for x in vec) + ")"
+
+
 def retrieve_context(user_input):
-    q_vec = get_embedding(user_input)   # returns Python list
+    q_vec = get_embedding(user_input)   # Python list of floats
     
-    q_vec_sql = to_array_construct(q_vec)  # "ARRAY_CONSTRUCT(0.12, -0.34, ...)"
+    # Convert to valid Snowflake SQL literal
+    q_vec_sql = to_array_construct(q_vec)  
     
     query = f"""
     SELECT CLAIM_ID, CLAIM_DESCRIPTION
@@ -111,6 +117,7 @@ def retrieve_context(user_input):
     cursor.execute(query)
     results = cursor.fetchall()
     return "\n".join([r[1] for r in results])
+
 
 
 
@@ -178,5 +185,6 @@ if user_input:
 
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
     st.rerun()
+
 
 
