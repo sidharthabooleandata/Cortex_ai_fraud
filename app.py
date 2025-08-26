@@ -96,21 +96,21 @@ def get_embedding(text: str):
     cursor.execute(query, (text,))
     return cursor.fetchone()[0]
 
-def to_array_construct(vec):
-    """Convert a Python list of floats into Snowflake ARRAY_CONSTRUCT(...) SQL"""
-    return "ARRAY_CONSTRUCT(" + ",".join(str(x) for x in vec) + ")"
+def to_vector_construct(vec):
+    """Convert a Python list of floats into Snowflake VECTOR_CONSTRUCT_FLOAT(...) SQL"""
+    return "VECTOR_CONSTRUCT_FLOAT(" + ",".join(str(x) for x in vec) + ")"
 
 
 def retrieve_context(user_input):
     q_vec = get_embedding(user_input)   # Python list of floats
     
     # Convert to valid Snowflake SQL literal
-    q_vec_sql = to_array_construct(q_vec)  
+    q_vec_sql = to_vector_construct(q_vec)
     
     query = f"""
     SELECT CLAIM_ID, CLAIM_DESCRIPTION
     FROM CORTEX_FRAUD.CORTEX_FRAUD_SCHEMA.CORTEX_FRAUD_TABLE
-    ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, TO_VECTOR({q_vec_sql})) DESC
+    ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, {q_vec_sql}) DESC
     LIMIT 5
     """
     
@@ -185,6 +185,7 @@ if user_input:
 
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
     st.rerun()
+
 
 
 
