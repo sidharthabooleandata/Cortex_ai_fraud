@@ -142,7 +142,8 @@ if "chats" not in st.session_state:
 if "current_chat" not in st.session_state:
     st.session_state.current_chat = None
 if "mode" not in st.session_state:
-    st.session_state.mode = "FAST"  # FAST = retrieval only, SMART = LLM reasoning
+    st.session_state.mode = "FAST (sub-second)"  # must match radio option
+  # FAST = retrieval only, SMART = LLM reasoning
 
 # ------------------------
 # MODE TOGGLE
@@ -201,3 +202,4 @@ if user_input:
     # Update UI
     placeholder.markdown(answer)
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
+
