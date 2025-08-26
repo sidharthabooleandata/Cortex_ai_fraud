@@ -110,7 +110,7 @@ def retrieve_context(user_input):
     SELECT CLAIM_ID, CLAIM_DESCRIPTION
     FROM CORTEX_FRAUD.CORTEX_FRAUD_SCHEMA.CORTEX_FRAUD_TABLE
     ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, {q_vec_sql}) DESC
-    LIMIT 5
+    LIMIT 3
     """
     
     cursor.execute(query)
@@ -130,7 +130,7 @@ def generate_answer(context: str, user_input: str):
 
     Question: {user_input}
     """
-    query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-7-sonnet', %s)"
+    query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('mistral-large', %s)"
     cursor.execute(query, (prompt,))
     return cursor.fetchone()[0]
 
@@ -185,6 +185,7 @@ if user_input:
 
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
     st.rerun()
+
 
 
 
