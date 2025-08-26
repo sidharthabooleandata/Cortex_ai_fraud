@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import serialization
 st.set_page_config(page_title="Boolean Chat_new_2", layout="wide")
 
 # ------------------------
-# SIDEBAR
+# SIDEBAR STYLING
 # ------------------------
 st.markdown("""
     <style>
@@ -19,11 +19,6 @@ st.markdown("""
     }
     div[data-testid="stChatMessage"] > div:nth-child(1) {
         display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        visibility: hidden !important;
     }
     div[data-testid="stChatMessage"] > div:nth-child(2) {
         margin-left: 0 !important;
@@ -91,19 +86,21 @@ cursor = conn.cursor()
 # ------------------------
 # HELPERS
 # ------------------------
+@st.cache_data(show_spinner=False)
 def get_embedding(text: str):
+    """Cached embeddings for speed."""
     query = "SELECT SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m', %s)"
     cursor.execute(query, (text,))
     return cursor.fetchone()[0]
 
 def to_vector_literal(vec):
-    """Convert Python list of floats into Snowflake VECTOR literal"""
     return "ARRAY_CONSTRUCT(" + ",".join(str(x) for x in vec) + ")::VECTOR(FLOAT, 768)"
 
-
-def retrieve_context(user_input):
-    q_vec = get_embedding(user_input)   # Python list of floats
-    
+def retrieve_context(user_input, history_text=""):
+    """Retrieve claims related to query, optionally including history."""
+    # Merge history with current query for context
+    full_query = f"{history_text}\n{user_input}" if history_text else user_input
+    q_vec = get_embedding(full_query)
     q_vec_sql = to_vector_literal(q_vec)
     
     query = f"""
@@ -112,27 +109,30 @@ def retrieve_context(user_input):
     ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, {q_vec_sql}) DESC
     LIMIT 3
     """
-    
     cursor.execute(query)
     results = cursor.fetchall()
     return "\n".join([r[1] for r in results])
 
-
-
-
-
-def generate_answer(context: str, user_input: str):
+def generate_answer(context: str, history: str, user_input: str):
+    """Use Cortex COMPLETE for reasoning mode (slower)."""
     prompt = f"""
     You are an expert in insurance.
-    Use the following claims context to answer the question:
+    Use the conversation history and claims context to answer.
 
+    History:
+    {history}
+
+    Context:
     {context}
 
     Question: {user_input}
     """
-    query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-7-sonnet', %s)"
-    cursor.execute(query, (prompt,))
-    return cursor.fetchone()[0]
+    try:
+        query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-7-sonnet', %s)"
+        cursor.execute(query, (prompt,))
+        return cursor.fetchone()[0]
+    except Exception as e:
+        return f"⚠️ Error from Cortex: {e}"
 
 # ------------------------
 # SESSION STATE
@@ -141,6 +141,15 @@ if "chats" not in st.session_state:
     st.session_state.chats = []
 if "current_chat" not in st.session_state:
     st.session_state.current_chat = None
+if "mode" not in st.session_state:
+    st.session_state.mode = "FAST (sub-second)"  # must match radio option
+  # FAST = retrieval only, SMART = LLM reasoning
+
+# ------------------------
+# MODE TOGGLE
+# ------------------------
+st.radio("⚡ Response Mode", ["FAST (sub-second)", "SMART (LLM reasoning)"], 
+         key="mode", horizontal=True)
 
 # ------------------------
 # MAIN CHAT
@@ -162,35 +171,35 @@ for role, message in current_messages:
 user_input = st.chat_input("Ask a question about insurance claims...")
 
 if user_input:
+    # Start new chat if none
     if st.session_state.current_chat is None:
         chat_name = f"{user_input[:30]}..."
         st.session_state.chats.append({"name": chat_name, "messages": []})
         st.session_state.current_chat = len(st.session_state.chats) - 1
 
+    # Append user message
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("user", user_input))
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Show placeholder while waiting
+    # Show assistant placeholder
     with st.chat_message("assistant"):
         placeholder = st.empty()
         placeholder.markdown("⏳ Thinking...")
 
-    # RAG pipeline
-    context = retrieve_context(user_input)
-    answer = generate_answer(context, user_input)
+    # Build history for context
+    history_text = "\n".join([f"{r}: {m}" for r, m in current_messages if r == "user"])
 
-    # Update placeholder with final answer
+    # Retrieval
+    context = retrieve_context(user_input, history_text)
+
+    # Mode handling
+    if st.session_state.mode.startswith("FAST"):
+        answer = f"📄 Relevant Claims:\n\n{context}"
+    else:
+        answer = generate_answer(context, history_text, user_input)
+
+
+    # Update UI
     placeholder.markdown(answer)
-
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
-    st.rerun()
-
-
-
-
-
-
-
-
-
