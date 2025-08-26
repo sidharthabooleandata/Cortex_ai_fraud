@@ -141,8 +141,7 @@ def generate_answer(context: str, history: str, user_input: str):
     Question: {user_input}
     """
     try:
-        query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('gemma-7b',%s
- )"
+        query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('gemma-7b',%s)"
         cursor.execute(query, (prompt,))
         return cursor.fetchone()[0]
     except Exception as e:
@@ -207,6 +206,7 @@ if user_input:
     # Update UI
     placeholder.markdown(answer)
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
+
 
 
 
