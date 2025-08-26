@@ -130,7 +130,7 @@ def generate_answer(context: str, user_input: str):
 
     Question: {user_input}
     """
-    query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-haiku', %s)"
+    query = "SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-5-sonnet', %s)"
     cursor.execute(query, (prompt,))
     return cursor.fetchone()[0]
 
@@ -185,6 +185,7 @@ if user_input:
 
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
     st.rerun()
+
 
 
 
