@@ -154,15 +154,9 @@ if "chats" not in st.session_state:
     st.session_state.chats = []
 if "current_chat" not in st.session_state:
     st.session_state.current_chat = None
-if "mode" not in st.session_state:
-    st.session_state.mode = "FAST (sub-second)"  # must match radio option
-  # FAST = retrieval only, SMART = LLM reasoning
+
 
 # ------------------------
-# MODE TOGGLE
-# ------------------------
-st.radio("⚡ Response Mode", ["FAST (sub-second)", "SMART (LLM reasoning)"], 
-         key="mode", horizontal=True)
 
 # ------------------------
 # MAIN CHAT
@@ -206,16 +200,13 @@ if user_input:
     # Retrieval
     context = retrieve_context(user_input, history_text)
 
-    # Mode handling
-    if st.session_state.mode.startswith("FAST"):
-        answer = f"📄 Relevant Claims:\n\n{context}"
-    else:
-        answer = generate_answer(context, history_text, user_input)
+    answer = generate_answer(context, history_text, user_input)
 
 
     # Update UI
     placeholder.markdown(answer)
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
+
 
 
 
