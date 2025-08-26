@@ -97,20 +97,21 @@ def get_embedding(text: str):
     return cursor.fetchone()[0]
 
 def retrieve_context(user_input):
-    q_vec = get_embedding(user_input)
+    q_vec = get_embedding(user_input)   # returns Python list
     
-    # Convert Python list → Snowflake array literal
-    q_vec_literal = "ARRAY" + str(tuple(q_vec)).replace("(", "[").replace(")", "]")
+    q_vec_sql = to_array_construct(q_vec)  # "ARRAY_CONSTRUCT(0.12, -0.34, ...)"
     
     query = f"""
     SELECT CLAIM_ID, CLAIM_DESCRIPTION
     FROM CORTEX_FRAUD.CORTEX_FRAUD_SCHEMA.CORTEX_FRAUD_TABLE
-    ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, {q_vec_literal}) DESC
+    ORDER BY VECTOR_COSINE_SIMILARITY(CORTEX_FRAUD_VECTOR, TO_VECTOR({q_vec_sql})) DESC
     LIMIT 5
     """
+    
     cursor.execute(query)
     results = cursor.fetchall()
     return "\n".join([r[1] for r in results])
+
 
 
 def generate_answer(context: str, user_input: str):
@@ -177,4 +178,5 @@ if user_input:
 
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
     st.rerun()
+
 
