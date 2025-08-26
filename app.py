@@ -65,30 +65,33 @@ with st.sidebar:
 
 # ------------------------
 # SNOWFLAKE CONNECTION (cached)
-from cryptography.hazmat.primitives import serialization
+# ------------------------
+# SNOWFLAKE CONNECTION (cached)
+# ------------------------
+@st.cache_resource(show_spinner=False)
+def get_connection():
+    private_key_bytes = st.secrets["snowflake"]["private_key"].encode()
 
-private_key_bytes = st.secrets["snowflake"]["private_key"].encode()
+    private_key = serialization.load_pem_private_key(
+        private_key_bytes,
+        password=None,   # Or b"your_passphrase" if your key has one
+    )
 
-private_key = serialization.load_pem_private_key(
-    private_key_bytes,
-    password=None,   # Or b"your_passphrase" if encrypted
-)
+    pkb = private_key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
 
-pkb = private_key.private_bytes(
-    encoding=serialization.Encoding.DER,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-)
-
-conn = snowflake.connector.connect(
-    account=st.secrets["snowflake"]["account"],
-    user=st.secrets["snowflake"]["user"],
-    role=st.secrets["snowflake"]["role"],
-    warehouse=st.secrets["snowflake"]["warehouse"],
-    database=st.secrets["snowflake"]["database"],
-    schema=st.secrets["snowflake"]["schema"],
-    private_key=pkb,
-)
+    return snowflake.connector.connect(
+        account=st.secrets["snowflake"]["account"],   # e.g. "DIC19309.us-east-1"
+        user=st.secrets["snowflake"]["user"],
+        role=st.secrets["snowflake"]["role"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"],
+        private_key=pkb,
+    )
 
 conn = get_connection()
 cursor = conn.cursor()
@@ -213,5 +216,6 @@ if user_input:
     # Update UI
     placeholder.markdown(answer)
     st.session_state.chats[st.session_state.current_chat]["messages"].append(("assistant", answer))
+
 
 
